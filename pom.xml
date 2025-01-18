@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>collections</module>
+        <module>json</module>
     </modules>
 
     <properties>
