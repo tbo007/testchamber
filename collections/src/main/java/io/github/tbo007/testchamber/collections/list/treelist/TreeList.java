@@ -5,13 +5,13 @@ import java.util.*;
 
 /**
  * ListImplementation that ensures a sorted state upon add / Remove.
- * Null Allowed
+ * Null Not allowed
  *
  * @param <E>
  */
 public class TreeList <E>  implements List<E> {
 
-    private class ListNode  {
+    class ListNode  {
         final E object;
         int pos = 1;
         ListNode prev;
@@ -25,7 +25,7 @@ public class TreeList <E>  implements List<E> {
         }
     }
 
-    private NavigableMap<E,ListNode> elementData;
+    /*package*/ NavigableMap<E,ListNode> elementData;
     private final Comparator<? super E> comparator;
 
     private final int size = 0;
@@ -187,4 +187,8 @@ public class TreeList <E>  implements List<E> {
     public int hashCode() {
         return super.hashCode();
     }
+
+    // package Methods
+
+
 }
