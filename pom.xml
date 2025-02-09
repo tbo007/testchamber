@@ -11,6 +11,7 @@
     <modules>
         <module>collections</module>
         <module>json</module>
+        <module>encoding</module>
     </modules>
 
     <properties>
