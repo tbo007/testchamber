@@ -3,6 +3,8 @@ package io.github.tbo007.testchamber.collections.list.treelist;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TreeListInternalTest {
@@ -51,6 +53,8 @@ class TreeListInternalTest {
         assertEquals(b, cNode.prev.object);
         assertEquals(a, cNode.prev.prev.object);
         assertEquals(c, cNode.prev.prev.prev.object);
+
+        new ListAssertion(List.of("A","B","C"),l).assertOk();
 
 
     }

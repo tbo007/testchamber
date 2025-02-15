@@ -25,10 +25,10 @@ public class TreeList <E>  implements List<E> {
         }
     }
 
-    /*package*/ NavigableMap<E,ListNode> elementData;
+    NavigableMap<E,ListNode> elementData;
     private final Comparator<? super E> comparator;
 
-    private final int size = 0;
+    private  int size = 0;
 
     public TreeList(Comparator<? super E> comparator) {
         this.comparator= comparator;
@@ -84,6 +84,7 @@ public class TreeList <E>  implements List<E> {
      * **/
     @Override
     public boolean add(E e) {
+        size++;
         ListNode newNode = new ListNode(e);
         ListNode oldNode = elementData.put(e, newNode);
         if(oldNode == null) {
