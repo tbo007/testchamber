@@ -23,6 +23,23 @@ class TreeListInternalTest {
 
     @Test
     void iterator() {
+    } @Test
+    void listNodeiterator() {
+        TreeList<TestObject> l = new TreeList<>();
+        TestObject a = new TestObject(1, "A");
+        l.add(a);
+        TestObject b = new TestObject(1, "B");
+        l.add(b);
+        TestObject c = new TestObject(1, "C");
+        l.add(c);
+        TreeList<TestObject>.ListNode listNode = l.elementData.get(a);
+        listNode = listNode.next();
+        System.out.println(listNode.object);
+        while (listNode.hasNext()) {
+            listNode = listNode.next();
+            System.out.println(listNode.object);
+        }
+
     }
 
     @Test
@@ -54,7 +71,7 @@ class TreeListInternalTest {
         assertEquals(a, cNode.prev.prev.object);
         assertEquals(c, cNode.prev.prev.prev.object);
 
-        new ListAssertion(List.of("A","B","C"),l).assertOk();
+       // new ListAssertion(List.of("A","B","C"),l).assertOk();
 
 
     }

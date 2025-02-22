@@ -11,6 +11,14 @@ import java.util.*;
  */
 public class TreeList <E>  implements List<E> {
 
+    NavigableMap<E,ListNode> elementData;
+    private final Comparator<? super E> comparator;
+
+    private  int size = 0;
+
+    /* Double Linked Data Structure:
+
+     */
     class ListNode  {
         final E object;
         int pos = 1;
@@ -21,14 +29,172 @@ public class TreeList <E>  implements List<E> {
             this.object = object;
             prev = this;
             next = this;
+        }
+
+        public boolean hasNext() {
+            return next != this;
+        }
+
+        public boolean hasPrev() {
+            return  prev != this;
+        }
+
+        public ListNode next() {
+            return next;
+
+        }
+        public ListNode prev() {
+            return prev;
 
         }
     }
 
-    NavigableMap<E,ListNode> elementData;
-    private final Comparator<? super E> comparator;
+    // TODO: Concurent Mod / No Such Element Exception
+    class ListIter implements ListIterator<E> {
 
-    private  int size = 0;
+        private enum Direction {
+            FORWARD,
+            BACKWARD
+        }
+
+        private ListNode current;
+        private int cursor;
+        private Direction direction;
+        private E currentKey;
+        private Iterator<Map.Entry<E,ListNode>> elementDataIter;
+        private ListNode currentNode;
+
+
+        public ListIter(int startIndex) {
+            this.cursor = startIndex;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor < size();
+        }
+
+        @Override
+        public E next() {
+            if (direction != Direction.FORWARD) {
+                direction = Direction.FORWARD;
+                position();
+            }
+            if (currentNode != null && currentNode.hasNext()) {
+                ListNode toReturn = currentNode.next;
+                currentNode = toReturn.hasNext() ? toReturn: null;
+                cursor++;
+                return toReturn.object;
+            }
+
+            if (currentNode == null) {
+                Map.Entry<E, ListNode> next = elementDataIter.next();
+                currentKey = next.getKey();
+                currentNode = next.getValue();
+            }
+            // the first Node is always the last added. @see #add()
+            ListNode toReturn = currentNode.next;
+            currentNode = toReturn.hasNext() ? toReturn: null;
+            cursor++;
+            return toReturn.object;
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return cursor > 0;
+        }
+
+        @Override
+        public E previous() {
+            if (direction != Direction.BACKWARD) {
+                direction = Direction.BACKWARD;
+                position();
+            }
+            if (currentNode != null && currentNode.hasPrev()) {
+                ListNode toReturn = currentNode.prev;
+                currentNode = toReturn.hasPrev() ? toReturn: null;
+                cursor--;
+                return toReturn.object;
+            }
+
+            if (currentNode == null) {
+                Map.Entry<E, ListNode> next = elementDataIter.next();
+                currentKey = next.getKey();
+                currentNode = next.getValue();
+                // the first Node is always the last added. @see #add()
+                currentNode = currentNode.next;
+            }
+
+            ListNode toReturn = currentNode.prev;
+            currentNode = toReturn.hasPrev() ? toReturn: null;
+            cursor--;
+            return toReturn.object;
+        }
+
+        @Override
+        public int nextIndex() {
+            return cursor+1;
+        }
+
+        @Override
+        public int previousIndex() {
+            return cursor-1;
+        }
+
+        @Override
+        public void remove() {
+
+        }
+
+        @Override
+        public void set(E e) {
+            throw new UnsupportedOperationException();
+
+        }
+
+        @Override
+        public void add(E e) {
+            throw new UnsupportedOperationException();
+
+        }
+
+        /** Auf den aktuellen CursorStand bringen oder Navigation umdrehen **/
+        private void position() {
+            currentNode = null;
+
+            NavigableMap<E,ListNode> currentMapPortion;
+            if (currentKey != null) {
+                currentMapPortion = direction == Direction.FORWARD ?
+                        elementData.tailMap(currentKey,true) :
+                        elementData.headMap(currentKey,true);
+            } else{
+                currentMapPortion = direction == Direction.FORWARD ? elementData :
+                        elementData.descendingMap();
+            }
+            elementDataIter = currentMapPortion.entrySet().iterator();
+
+            // Wenn nicht am Anfang oder Ende der Liste, zur richtige Stelle "spulen"
+            if(cursor != 0 && cursor != size()-1 && currentKey == null) {
+                // Wenn FORWARD, dann von 0 zum Index laufen, ansonsten von size()-1
+                // rückwärts. Was mit remove() machen ?
+                if(direction == Direction.FORWARD) {
+                    int i = 0;
+                    while (i <= cursor ) {
+                        next();
+                        i++;
+                    }
+                }else {
+                    int i = size()-1;
+                    while (cursor > i) {
+                        previous();
+                        i--;
+                    }
+                }
+            }
+        }
+    }
+
+
 
     public TreeList(Comparator<? super E> comparator) {
         this.comparator= comparator;
@@ -42,7 +208,7 @@ public class TreeList <E>  implements List<E> {
 
     public TreeList(Collection<? extends E> c) {
         this((Comparator<? super E>) null);
-        // TODO impl;
+        c.forEach(this::add);
     }
 
 
@@ -63,7 +229,7 @@ public class TreeList <E>  implements List<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return listIterator();
     }
 
     @Override
@@ -108,7 +274,7 @@ public class TreeList <E>  implements List<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public boolean  addAll(Collection<? extends E> c) {
         return false;
     }
 
@@ -166,12 +332,12 @@ public class TreeList <E>  implements List<E> {
 
     @Override
     public ListIterator<E> listIterator() {
-        return null;
+        return listIterator(0);
     }
 
     @Override
     public ListIterator<E> listIterator(int index) {
-        return null;
+        return new ListIter(index);
     }
 
     @Override

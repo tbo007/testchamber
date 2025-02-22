@@ -17,5 +17,15 @@ public class ListAssertion {
     public void  assertOk () {
         assertEquals(reference.size(),subject.size(), "Size");
         assertEquals(reference.isEmpty(),subject.isEmpty(),"isEmpty");
+
+        // Iter
+        int refSize = reference.size();
+        assertEquals(reference.listIterator(refSize).previous(),
+                subject.listIterator(refSize).previous(), "ListIter(size).prev");
+        assertEquals(reference.listIterator(0).next(),
+                subject.listIterator(0).next(), "ListIter(0).next");
+
+        // comod...
+
     }
 }
