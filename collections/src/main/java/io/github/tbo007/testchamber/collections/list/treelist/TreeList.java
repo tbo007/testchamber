@@ -94,17 +94,16 @@ public class TreeList<E> implements List<E> {
                 cursor--;
                 return elemIter.next();
             }
-
         }
 
         @Override
         public int nextIndex() {
-            return cursor +1;
+            return hasNext() ? cursor +1 : size();
         }
 
         @Override
         public int previousIndex() {
-            return cursor -1;
+            return  hasPrevious()? cursor -1: -1;
         }
 
         @Override
@@ -157,12 +156,6 @@ public class TreeList<E> implements List<E> {
     @Override
     public boolean contains(Object o) {
         NavigableSet<E> subset = elementData.tailSet((E) o, true);
-        // Wenn Comperator sagt, iter.current >= 1, kann man aufhören
-        // denn dann ist man schom zu weit. <0 kann es nicht geben, 0 wenn equals
-        // wie bei TreeMap contains und wie gesagt > 0 ist man schon drüber
-        // reiocht es, dass erste Element zu prüfen, oder muss man bis zum Ende iterieren
-        // TODO: Schreibtisch Test schreiben und mit Marcus reden. die die kleiner gleich sind,
-        // würden ja beim compare sonst die plätze tauschen: 1.compare2 vs 2.compare1
        for (Object e : subset) {
            int retval = comparator.compare(e,o);
            if(retval == 0) {
@@ -170,7 +163,6 @@ public class TreeList<E> implements List<E> {
            }
        }
         return false;
-//        return comparator.compare(subset.iterator().next(),o) == 0;
     }
 
     @Override
@@ -208,17 +200,26 @@ public class TreeList<E> implements List<E> {
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        for (Object o: c) {
+            if (!contains(o)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     public boolean addAll(Collection<? extends E> c) {
-        return false;
+        boolean modified = false;
+        for (E e : c)
+            if (add(e))
+                modified = true;
+        return modified;
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
-        return false;
+       throw  new UnsupportedOperationException();
     }
 
     @Override
@@ -262,7 +263,15 @@ public class TreeList<E> implements List<E> {
 
     @Override
     public int indexOf(Object o) {
-        return 0;
+        ListIterator<E> iter = listIterator();
+        E e;
+        int  comp;
+        do {
+            e = iter.next();
+           comp = comparator.compare(o,e);
+        }
+        while (iter.hasNext() && comp != 0);
+        return comp == 0 ? iter.nextIndex()-1 : -1;
     }
 
     @Override
