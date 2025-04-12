@@ -14,11 +14,15 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.txt.Icu4jEncodingDetector;
 import org.apache.tika.parser.txt.UniversalEncodingDetector;
 import org.apache.tika.sax.BodyContentHandler;
+import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +33,9 @@ public class EncodingTest {
 
     private static final Logger log = LogManager.getLogger(EncodingTest.class);
 
+    private static final String CS_ISO_15 = "ISO-8859-15";
+    private static final String CS_UTF_8 = "UTF-8";
+
 
 
     @Test
@@ -38,18 +45,18 @@ public class EncodingTest {
 
             int [] unicode_bom = {0xFEFF};
             String string = new String(unicode_bom,0,unicode_bom.length);
-            System.out.println(toHexString(string.getBytes("UTF-8")));
+            System.out.println(toHexString(string.getBytes(CS_UTF_8)));
 
             // UTF8-BOM
-            out.write(string.getBytes("UTF-8"));
+            out.write(string.getBytes(CS_UTF_8));
 
             String umlautz = "lösche Agent\n";
 
             // 1. mit BOM
             // 2. ohne BOM
             // 3. ohne BOM nur ISO oder nur utf
-            out.write(umlautz.getBytes("UTF-8"));
-            //out.write(umlautz.getBytes("ISO-8859-15"));
+            out.write(umlautz.getBytes(CS_UTF_8));
+            //out.write(umlautz.getBytes(CS_ISO_15));
         }
     }
 
@@ -57,8 +64,8 @@ public class EncodingTest {
     @Test
     void platformEncoding() throws UnsupportedEncodingException {
         String umlautz = "äöü";
-        byte[] ISO_8859_15 = umlautz.getBytes("ISO-8859-15");
-        String isoString = new String(ISO_8859_15, "ISO-8859-15");
+        byte[] ISO_8859_15 = umlautz.getBytes(CS_ISO_15);
+        String isoString = new String(ISO_8859_15, CS_ISO_15);
         String utf8String = new String(isoString.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         System.out.println(isoString);
         for (int i = 0; i < 10; i++) {
@@ -93,9 +100,19 @@ public class EncodingTest {
     }
 
     @Test
+    void buildInDetectorTest () throws Exception {
+        CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder();
+        String string ="öööööööääääää";
+        assertThrows(MalformedInputException.class, ()->
+        utf8Decoder.decode(ByteBuffer.wrap(string.getBytes(CS_ISO_15))));
+        assertDoesNotThrow( ()->
+        utf8Decoder.decode(ByteBuffer.wrap(string.getBytes(CS_UTF_8))));
+    }
+
+    @Test
     void tikaTest2 () throws Exception {
         String join = String.join("", Collections.nCopies(2000, "ööööaaaa"));
-        ByteArrayInputStream str = new ByteArrayInputStream(join.getBytes("ISO-8859-15"));
+        ByteArrayInputStream str = new ByteArrayInputStream(join.getBytes(CS_ISO_15));
 
  //       try (InputStream input = str) {
         // log42.log
@@ -105,14 +122,14 @@ public class EncodingTest {
 
 
             System.out.println(tikaDetect(bytes));
-            String string = new String(bytes,"ISO-8859-15");
+            String string = new String(bytes,CS_ISO_15);
             // Prepend € because it is different in all Three Encodings
             //string = "€" + string;
-            System.out.println(tikaDetect(string.getBytes("UTF-8")));
+            System.out.println(tikaDetect(string.getBytes(CS_UTF_8)));
             String winString = string.replaceAll("\\n", "\\r\\n");
             System.out.println(winString.equals(string));
             System.out.println(tikaDetect(winString.getBytes("windows-1252")));
-            System.out.println(tikaDetect(string.getBytes("ISO-8859-15")));
+            System.out.println(tikaDetect(string.getBytes(CS_ISO_15)));
 
             /* Plan:
              * Eigener Encoding detector
@@ -125,7 +142,7 @@ public class EncodingTest {
 
     private static Charset tikaDetect(byte[] bytes) throws IOException {
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.CONTENT_ENCODING,"ISO-8859-15");
+        metadata.set(Metadata.CONTENT_ENCODING,CS_ISO_15);
         EncodingDetector detector = new Icu4jEncodingDetector();
         //EncodingDetector detector = new UniversalEncodingDetector();
         return detector.detect(new ByteArrayInputStream(bytes), metadata);
