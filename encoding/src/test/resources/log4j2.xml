@@ -3,14 +3,12 @@
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" >
-                <charset>"ISO-8859-15"</charset>
             </PatternLayout>
         </Console>
-        <File name="FileAppender" fileName="application-${date:yyyyMMdd}.log" immediateFlush="false" append="true">
-            <PatternLayout pattern="%msg%n" charset="ISO-8859-15">
-            <!--PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"-->
-                <!--charset>"ISO-8859-15"</charset-->
-                <charset>"ISO-8859-15"</charset>
+        <File name="FileAppender" fileName="./target/encoding-${date:yyyyMMdd}.log" immediateFlush="false" append="true">
+            <PatternLayout
+                    pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+                    charset="ISO-8859-15">
             </PatternLayout>
         </File>
     </Appenders>
