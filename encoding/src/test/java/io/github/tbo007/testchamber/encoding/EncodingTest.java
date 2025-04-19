@@ -20,6 +20,7 @@ import org.xml.sax.SAXException;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.MalformedInputException;
@@ -102,11 +103,17 @@ public class EncodingTest {
     @Test
     void buildInDetectorTest () throws Exception {
         CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder();
-        String string ="öööööööääääää";
+        CharsetDecoder isoDecoder = StandardCharsets.ISO_8859_1.newDecoder();
+        //isoDecoder.onUnmappableCharacter();
+        String umlautz ="öööööööääääää";
         assertThrows(MalformedInputException.class, ()->
-        utf8Decoder.decode(ByteBuffer.wrap(string.getBytes(CS_ISO_15))));
-        assertDoesNotThrow( ()->
-        utf8Decoder.decode(ByteBuffer.wrap(string.getBytes(CS_UTF_8))));
+        utf8Decoder.decode(ByteBuffer.wrap(umlautz.getBytes(CS_ISO_15))));
+        assertThrows(MalformedInputException.class, ()->
+        isoDecoder.decode(ByteBuffer.wrap(umlautz.getBytes(StandardCharsets.UTF_8))));
+        assertDoesNotThrow( ()-> utf8Decoder.decode(ByteBuffer.wrap(umlautz.getBytes(CS_UTF_8))));
+        assertDoesNotThrow( ()-> isoDecoder.decode(ByteBuffer.wrap(umlautz.getBytes(CS_ISO_15))));
+        assertDoesNotThrow( ()-> isoDecoder.decode(ByteBuffer.wrap(("€"+umlautz).getBytes(CS_ISO_15))));
+
     }
 
     @Test
