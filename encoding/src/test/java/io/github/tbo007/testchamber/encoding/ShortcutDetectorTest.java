@@ -22,6 +22,11 @@ class ShortcutDetectorTest {
     // ASCII_ONLY --> ISO...
     private static final String TEST_STR_ASCII = "die EZB verteidigt den EURO ohne Gnade";
 
+    private static final String TEST_STR_UTF8_MULTI2 = "Immer diese Ä";
+    private static final String TEST_STR_UTF8_MULTI3 = "Immer dieser €";
+    // Potentiell utf-8 n bytes, aber ist nicht
+    private static final String TEST_STR_POT_UTF8_MULTI = "Das ist ein Test än";
+
     static Stream<Arguments> testInput() {
         return Stream.of(
                   // Umlaute
@@ -30,7 +35,19 @@ class ShortcutDetectorTest {
                   // Sonderzeichen
                   Arguments.of(TEST_STR_EURO,UTF_8),
                   Arguments.of(TEST_STR_EURO,ISO_8859_15),
-                  Arguments.of(TEST_STR_EURO,CP1252)
+                  Arguments.of(TEST_STR_EURO,CP1252),
+                  Arguments.of(TEST_STR_ASCII,ISO_8859_15),
+                  // Last byte multi
+                  Arguments.of(TEST_STR_UTF8_MULTI2,UTF_8),
+                  Arguments.of(TEST_STR_UTF8_MULTI2,ISO_8859_15),
+                  Arguments.of(TEST_STR_UTF8_MULTI3,UTF_8),
+                  Arguments.of(TEST_STR_UTF8_MULTI3,ISO_8859_15),
+                  // nicht genug follow bytes in utf-8. Detector geht in utf-8
+                  // Zweig obwhol es iso ist...
+                  // ä = E4 (iso) und in utf8 first byte of three byte. Aber
+                  // es kommt nur noch n...
+                  Arguments.of(TEST_STR_POT_UTF8_MULTI,ISO_8859_15),
+                  Arguments.of(TEST_STR_POT_UTF8_MULTI,UTF_8)
        );
     }
 

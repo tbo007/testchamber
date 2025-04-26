@@ -3,27 +3,15 @@ package io.github.tbo007.testchamber.encoding;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-/* Legal UTF-8 Byte Sequences
+/**
+ * Encoding Detector der auf Basis der im Code beschriebenen Heuristik entscheidet, welches
+ * der folgenden Encodings geeignet ist um das übergebene byte Array als String zu interpretieren
+ * ISO_8859_15 , CP1252 und UTF_8
  *
- * #    Code Points      Bits   Bit/Byte pattern
- * 1                     7      0xxxxxxx
- *      U+0000..U+007F          00..7F
- *
- * 2                     11     110xxxxx    10xxxxxx
- *      U+0080..U+07FF          C2..DF      80..BF
- *
- * 3                     16     1110xxxx    10xxxxxx    10xxxxxx
- *      U+0800..U+0FFF          E0          A0..BF      80..BF
- *      U+1000..U+FFFF          E1..EF      80..BF      80..BF
- *
- * 4                     21     11110xxx    10xxxxxx    10xxxxxx    10xxxxxx
- *     U+10000..U+3FFFF         F0          90..BF      80..BF      80..BF
- *     U+40000..U+FFFFF         F1..F3      80..BF      80..BF      80..BF
- *    U+100000..U10FFFF         F4          80..8F      80..BF      80..BF
- *
+ * @author Daniel Stein
+ * @version 1.0
+ * https://github.com/tbo007
  */
-
-
 public class ShortcutDetector {
 
     public static final Charset CP1252 = Charset.forName("windows-1252");
@@ -31,22 +19,19 @@ public class ShortcutDetector {
     public static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     private final byte [] encodedBytes;
+    private final int iEndExclusive;
 
-    // CR LF ist ASCII, also in allen drei. Merken ob detected, für unterscheidung iso / win
-    // Wenn bytes 80–9F  und kein UTF-8 n byte Zeichen detektiert wurde, starkes Indiz, dass CP1252,
-    // da ISO... in diesem Bereich nur Steuerzeichen enthält
-
-    // Wenn A4 dabei ist, und kein UTF-8 n bytes, dann shortcut ISO, denn in CP1252 ist A4 Placeholder für Währung
-    // und das nutzt keiner...
-
-
-    public ShortcutDetector(byte[] encodedBytes) {
+    public ShortcutDetector(byte[] encodedBytes, int iEndExclusive) {
         this.encodedBytes = encodedBytes;
+        this.iEndExclusive = iEndExclusive;
+    }
+    public ShortcutDetector(byte[] encodedBytes) {
+        this(encodedBytes,encodedBytes.length);
     }
 
     public Charset detect() {
 
-        for (int i = 0; i <encodedBytes.length ; i++) {
+        for (int i = 0; i <iEndExclusive ; i++) {
 
             int unsigedByte = encodedBytes[i] & 0xFF;
 
@@ -54,30 +39,42 @@ public class ShortcutDetector {
                 //Ist sieben Bit ASCII. In allen drei Encodings gleich
                 continue;
             }
-            int unsignedNextByte = encodedBytes[i+1] & 0xFF;
-
-            // Wette auf nicht UTF-8: Erstes UTF-8 zwei Byte beginnt bei C2. In ISO-8859-15 und CP1252 häufig
-            // genutzte Zeichen die nicht ASCII sind ab C4 (Ä). Daher wenn currentbyte >= C2 und nextByte < 80, dann
-            // ist es kein UTF8- zwei byte char und kann nur ISO-8859-15 oder CP1252 sein
-            if (unsigedByte >= 0xC2 && unsignedNextByte < 0x80) {
-                continue;
-            }
 
             // Wenn bytes 80–9F, dann shortcut zu CP1252. Denn IS0 enthält in diesen Bereich nicht tipbare Steuerzeichen
+            // und CP1252 darstellbare Zeichen wie das Euro Zeichen
             if (unsigedByte >= 0x80 && unsigedByte <= 0x9f) {
                 return CP1252;
             }
 
-            if (unsigedByte >= 0xC2 && unsigedByte <= 0xDF) {
-                if (unsignedNextByte >= 80 && unsignedNextByte <= 0xBF) {
-                    // Geringe Wahrscheinlichkeit  für zwei Byte ISO chars in Folge  C2..DF  /  80..BF sehr gering...
-                    return UTF_8;
-                }
-            }
             // Wenn A4 (ISO 885916 € --> short cut denn in CP1252 Currency Placeholder und in UTF8 single byte undefiniert
-            // und currenzy Placeholder ist C2 A4 und Euro drei byte E2 82 AC
+            // und currenzy Placeholder ist C2 A4 und Euro drei byte E2 82 AC. und A4 ist auch kein gültiges Single-Byte
+            // Zeichen in UTF8
             if (unsigedByte == 0xA4) {
                 return ISO_8859_15;
+            }
+
+            // UTF-8 Shortcut
+            int iExpectedFollowBytes = 0;
+            // UTF8-4 Byte 11110xxx (F0)   10xxxxxx    10xxxxxx    10xxxxxx
+            if(unsigedByte >= 0xF0) {
+                iExpectedFollowBytes = 3;
+            // UTF8-3 Byte  1110xxxx (E0)    10xxxxxx    10xxxxxx
+            } else if (unsigedByte >= 0xE0) {
+                iExpectedFollowBytes = 2;
+            // UTF8-2 Byte 110xxxxx (C2)   10xxxxxx
+            } else if (unsigedByte >= 0xC2 ) {
+                iExpectedFollowBytes = 1;
+            }
+            int  iuntil = Math.min(encodedBytes.length-1, i+iExpectedFollowBytes);
+            // Follow bytes (80..BF)
+            for (int j = i+1; j <=iuntil ; j++) {
+                int unsignedfollowByte = encodedBytes[j] & 0xFF;
+                if (unsignedfollowByte >= 0x80 && unsignedfollowByte <=0xBF) {
+                    iExpectedFollowBytes--;
+                }
+            }
+            if (iExpectedFollowBytes == 0) {
+                return UTF_8;
             }
         }
         return ISO_8859_15;
