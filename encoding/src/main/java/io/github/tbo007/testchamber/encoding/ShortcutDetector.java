@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
  * ISO_8859_15 , CP1252 und UTF_8
  *
  * @author Daniel Stein
- * @version 1.0
+ * @version 1.1
  * https://github.com/tbo007
  */
 public class ShortcutDetector {
@@ -51,6 +51,11 @@ public class ShortcutDetector {
             // Zeichen in UTF8
             if (unsigedByte == 0xA4) {
                 return ISO_8859_15;
+            }
+
+            // Das erste UTF-8 Multibyte beginnt bei C2
+            if(unsigedByte < 0xC2) {
+                continue;
             }
 
             // UTF-8 Shortcut

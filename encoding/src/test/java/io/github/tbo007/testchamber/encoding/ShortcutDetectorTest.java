@@ -47,7 +47,8 @@ class ShortcutDetectorTest {
                   // ä = E4 (iso) und in utf8 first byte of three byte. Aber
                   // es kommt nur noch n...
                   Arguments.of(TEST_STR_POT_UTF8_MULTI,ISO_8859_15),
-                  Arguments.of(TEST_STR_POT_UTF8_MULTI,UTF_8)
+                  Arguments.of(TEST_STR_POT_UTF8_MULTI,UTF_8),
+                  Arguments.of("Test ISO § (A7) is not accidental UTF-8",ISO_8859_15)
        );
     }
 
