@@ -3,10 +3,12 @@ package io.github.tbo007.testchamber.smt.graph;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Solver;
+import de.danielstein.gridgraph.AWAConverter;
 import de.danielstein.gridgraph.AbstractTest;
 import de.danielstein.gridgraph.GridGraph;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +22,17 @@ public class Z3LayoutTest extends AbstractTest {
     void firstTest() throws Exception {
         GridGraph<?> graph = generateComplexJPL().prepare();
         try(Z3Layout layout = new Z3Layout(graph)) {
+            layout.layout();
+        }
+
+    }
+
+    @Test
+    public void testRead () throws IOException {
+        Path path = Path.of("src/test/resources/syt007.json");
+        AWAConverter converter = new AWAConverter(path);
+        GridGraph<?> gridGraph = converter.convert();
+        try(Z3Layout layout = new Z3Layout(gridGraph)) {
             layout.layout();
         }
 

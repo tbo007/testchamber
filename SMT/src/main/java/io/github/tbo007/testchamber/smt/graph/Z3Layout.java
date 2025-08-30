@@ -1,10 +1,7 @@
 package io.github.tbo007.testchamber.smt.graph;
 
 import com.microsoft.z3.*;
-import de.danielstein.gridgraph.Edge;
-import de.danielstein.gridgraph.GridGraph;
-import de.danielstein.gridgraph.Tile;
-import de.danielstein.gridgraph.Vertex;
+import de.danielstein.gridgraph.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -45,8 +42,9 @@ public class Z3Layout implements Closeable {
         //System.out.println(model);
 
         evaluate(model);
+        BoxDrawing drawing = new BoxDrawing(graph);
 
-        System.out.println(graph);
+        System.out.println(drawing.draw());
     }
 
     private void evaluate(Model model) {
