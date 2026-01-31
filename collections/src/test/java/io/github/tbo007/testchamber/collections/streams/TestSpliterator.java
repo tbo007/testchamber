@@ -27,9 +27,10 @@ public class TestSpliterator {
         Spliterator<Integer> spi= new RangeSpliterator<>(0, 3000, 1000) {
             @Override
             protected Iterator<Integer> nextChunck(long from, long to) {
-                System.out.println("f:" + from + " t: "+ to);
                 SortedMap<Long, Integer> range = svn.subMap(from, to + 1);
-                return range.values().iterator();
+                Collection<Integer> values = range.values();
+                System.out.println("f:" + from + " t: "+ to + " size: " +values.size());
+                return values.iterator();
             }
         };
         List<Integer> revs = new ArrayList<>();
