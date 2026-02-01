@@ -16,25 +16,51 @@ public class TestSpliterator {
      *  4. 3000 - 3000
      */
     @Test
-    void testSpliterator() {
+    void testForward() {
 
+        SortedMap<Long, Integer> svn = getSvn();
+        List<Integer> revs = buildSpliterator(svn, 0, 3000);
+        assertEquals(new ArrayList<>( svn.values()),revs);
+    }
+    @Test
+    void testBackward() {
+
+        SortedMap<Long, Integer> svn = getSvn();
+        List<Integer> revs = buildSpliterator(svn, 3000, 0);
+        ArrayList<Integer> expected = new ArrayList<>(svn.values());
+        expected.sort(Comparator.reverseOrder());
+        assertEquals(expected,revs);
+    }
+
+    private static SortedMap<Long, Integer> getSvn() {
         SortedMap<Long,Integer> svn = new TreeMap<>();
         svn.put(3L,3);
         svn.put(999L,999);
         svn.put(2000L,2000);
         svn.put(3000L,3000);
+        return svn;
+    }
 
-        Spliterator<Integer> spi= new RangeSpliterator<>(0, 3000, 1000) {
+    public List<Integer> buildSpliterator (SortedMap<Long,Integer> input, long from, long to) {
+        Spliterator<Integer> spi= new RangeSpliterator<>(from, to, 1000) {
             @Override
             protected Iterator<Integer> nextChunck(long from, long to) {
-                SortedMap<Long, Integer> range = svn.subMap(from, to + 1);
-                Collection<Integer> values = range.values();
+                SortedMap<Long, Integer> range;
+                if (from > to) {
+                    range  = input.subMap(to, from + 1);
+                } else {
+                    range = input.subMap(from, to + 1);
+                }
+                List<Integer> values = new ArrayList<>(range.values());
                 System.out.println("f:" + from + " t: "+ to + " size: " +values.size());
+                if(from > to) {
+                    Collections.sort(values, Comparator.reverseOrder());
+                }
                 return values.iterator();
             }
         };
         List<Integer> revs = new ArrayList<>();
         while (spi.tryAdvance(revs::add));
-        assertEquals(new ArrayList<>( svn.values()),revs);
+        return revs;
     }
 }

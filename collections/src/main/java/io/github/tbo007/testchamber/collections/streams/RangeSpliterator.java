@@ -29,6 +29,7 @@ public abstract class RangeSpliterator <T> extends Spliterators.AbstractSplitera
         this.chunkSize = chunckSize -1;
         iterator = Collections.emptyIterator();
         direction = start < end ? Dir.FORWARD: Dir.BACKWARD;
+        fetchedUntil =  start;
     }
 
     protected abstract Iterator<T> nextChunck(long from, long to);
@@ -46,7 +47,7 @@ public abstract class RangeSpliterator <T> extends Spliterators.AbstractSplitera
                 fetchedUntil = chunkEnd;
                 start = chunkEnd + 1;
             } else {
-                chunkEnd = end - chunkSize;
+                chunkEnd = start - chunkSize;
                 chunkEnd = Math.max(chunkEnd, end);
                 iterator = nextChunck(start, chunkEnd);
                 fetchedUntil = chunkEnd;
